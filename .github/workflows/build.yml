@@ -24,7 +24,7 @@ jobs:
         pip install -r requirements.txt
 
     - name: Build Docker image
-      run: docker build -t myflaskapp .
+      run: docker build -t build .
 
     - name: Log in to Docker Hub
       uses: docker/login-action@v2
@@ -34,5 +34,6 @@ jobs:
 
     - name: Push Docker image
       run: |
-        docker tag myflaskapp ${{ secrets.DOCKER_USERNAME }}/myflaskapp
-        docker push ${{ secrets.DOCKER_USERNAME }}/myflaskapp
+        docker tag build ${{ secrets.DOCKER_USERNAME }}/build
+        docker push ${{ secrets.DOCKER_USERNAME }}/build
+
