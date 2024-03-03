@@ -54,6 +54,6 @@ jobs:
       # Add steps for deploying your Flask app from dev to main branch
       - name: Deploy to main branch
         run: |
-          git checkout main
-          git merge dev
-          git push origin main
+            git checkout main
+            git merge ${{ github.ref }}
+            git push origin main
