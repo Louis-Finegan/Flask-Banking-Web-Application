@@ -2,4 +2,3 @@ flask
 Flask-SQLAlchemy
 flask-login
 pytest
-Flask-Testing
