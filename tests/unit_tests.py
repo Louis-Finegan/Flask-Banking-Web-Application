@@ -3,8 +3,9 @@ import sys
 
 sys.path.insert(1, '../')
 
+from flask import t
 import unittest
-import main as app
+import Website as app
     
 
 class TestFlaskApp(unittest.TestCase):
