@@ -53,12 +53,18 @@ jobs:
 
       - name: Set up Git
         run: |
-          git config --global user.email "actions@github.com"
-          git config --global user.name "GitHub Actions"
-          git config --global credential.helper store
-
-      - name: Push changes to dev branch
-        env:
-          GIT_AUTH_TOKEN: ${{ secrets.AUTH_TOKEN }}
+          git config --global user.name 'github-actions'
+          git config --global user.email 'github-actions@github.com'
+          
+      - name: Check for changes
+        id: check_changes
         run: |
-          git push https://${GIT_AUTH_TOKEN}@github.com/${{ github.repository }} HEAD:refs/heads/dev
+          git diff --exit-code || echo "::set-output name=changed::true"
+        continue-on-error: true
+          
+      - name: Commit and push changes
+        if: steps.check_changes.outputs.changed == 'true'
+        run: |
+          git add .
+          git commit -m "Modified Web app"
+          git push
