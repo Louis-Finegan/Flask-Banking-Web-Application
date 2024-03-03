@@ -51,9 +51,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      # Add steps for deploying your Flask app from dev to main branch
-      - name: Deploy to main branch
+      - name: Deploy changes to dev branch
         run: |
-            git checkout -b main
-            git merge ${{ github.ref }}
-            git push origin main
+            git push origin HEAD:${{ github.ref }}
