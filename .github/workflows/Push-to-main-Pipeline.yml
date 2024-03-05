@@ -21,7 +21,7 @@ jobs:
 
       - name: Push Docker image
         run: |
-            docker build -t ${{ secrets.DOCKER_USERNAME }}/bankapp:latest .
+            docker build . -t ${{ secrets.DOCKER_USERNAME }}/bankapp:latest
             docker push ${{ secrets.DOCKER_USERNAME }}/bankappv:latest
 
   test:
