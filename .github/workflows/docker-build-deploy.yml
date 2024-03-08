@@ -7,7 +7,7 @@ on:
       - completed
 
 jobs:
-  build:
+  build_docker:
     runs-on: ubuntu-latest
 
     steps:
@@ -26,7 +26,7 @@ jobs:
         with:
             images: ${{ secrets.DOCKER_USERNAME }}/bankapp
 
-  deploy:
+  deploy_docker:
     runs-on: ubuntu-latest
     needs: build
 
