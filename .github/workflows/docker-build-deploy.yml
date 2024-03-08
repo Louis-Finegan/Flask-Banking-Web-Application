@@ -2,7 +2,7 @@ name: Docker-Build-Deploy Pipeline dev
 
 on:
   workflow_run: 
-    workflows: ['Build-Test_Deploy Pipeline']
+    workflows: ["Build-Test-Deploy Pipeline"]
     types: 
       - completed
 
