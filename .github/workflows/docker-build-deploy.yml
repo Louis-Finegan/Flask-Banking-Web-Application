@@ -3,7 +3,8 @@ name: Docker Build Deploy
 on:
   workflow_run: 
     workflows: ["Build-Test-Deploy Pipeline"]
-    types: [completed]
+    branches: '**'
+    types: [requested, completed]
 
 jobs:
   build_docker:
