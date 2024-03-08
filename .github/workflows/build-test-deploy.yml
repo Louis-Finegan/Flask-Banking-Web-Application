@@ -42,14 +42,13 @@ jobs:
           git config --global user.name 'github-actions'
           git config --global user.email 'github-actions@github.com'
           
-      - name: Check for changes
-        id: check_changes
-        run: |
-          git diff --exit-code || echo "::set-output name=changed::true"
-        continue-on-error: true
+      #- name: Check for changes
+      #  id: check_changes
+      #  run: |
+      #    git diff --exit-code || echo "::set-output name=changed::true"
+      #  continue-on-error: true
           
       - name: Commit and push changes
-        if: steps.check_changes.outputs.changed == 'true'
         run: |
           git add .
           git commit -m "Modified Web app"
