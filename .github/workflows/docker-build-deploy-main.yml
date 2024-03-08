@@ -1,4 +1,4 @@
-name: Build-Test-Deploy Pipeline
+name: Docker-Build-Deploy Pipeline main
 
 on:
   push:

@@ -1,4 +1,4 @@
-name: Build-Test-Deploy Pipeline
+name: Docker-Build-Deploy Pipeline dev
 
 on:
   push:
@@ -26,7 +26,3 @@ jobs:
             push: true
             tags: latest
             labels: bankapp
-
-        run: |
-            docker build -t ${{ secrets.DOCKER_USERNAME }}/bankapp:latest .
-            docker push ${{ secrets.DOCKER_USERNAME }}/bankapp:latest
