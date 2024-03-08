@@ -1,4 +1,4 @@
-name: Docker-Build-Deploy Pipeline dev
+name: Docker-Build-Deploy
 
 on:
   workflow_run: 
