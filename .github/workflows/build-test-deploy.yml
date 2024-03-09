@@ -64,9 +64,11 @@ jobs:
       
       - name: Extract metadata for Docker
         id: meta
-        uses: docker/metadata-action@v2
+        uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
         with:
           images: ${{ secrets.DOCKER_USERNAME }}/bankapp
+          tags: |
+            type=raw,value={{date 'Y-M-D-H-m-S'}}
       
   deploy_docker:
     runs-on: ubuntu-latest
@@ -80,7 +82,6 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}      
+          tags:  $(date +%s) 
   
     
