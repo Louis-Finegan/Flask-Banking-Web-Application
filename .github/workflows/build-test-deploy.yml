@@ -3,7 +3,7 @@ name: Build Test Deploy
 on:
   push:
     branches:
-      - '**'
+      - dev
 
 jobs:
   build:
@@ -68,6 +68,12 @@ jobs:
     needs: build_docker
       
     steps:
+
+      - name: Extract metadata for Docker
+        id: meta
+        uses: docker/metadata-action@v2
+        with:
+          images: ${{ secrets.DOCKER_USERNAME }}/bankapp
       
       - name: Push Docker image
         uses: docker/build-push-action@v2
@@ -75,6 +81,7 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags:  $(date +%s) 
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }} 
   
     
