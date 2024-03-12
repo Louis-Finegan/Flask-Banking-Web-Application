@@ -66,9 +66,10 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Push Docker image
+        if: $(git rev-parse --abbrev-ref HEAD) == "dev"
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./Dockerfile
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/bankapp${{ git rev-parse --abbrev-ref HEAD }}:latest
+          tags: ${{ secrets.DOCKER_USERNAME }}/bankappdev:latest
