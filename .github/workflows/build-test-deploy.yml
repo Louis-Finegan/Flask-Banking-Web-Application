@@ -71,4 +71,4 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/bankapp$(git rev-parse --abbrev-ref HEAD):latest
+          tags: ${{ secrets.DOCKER_USERNAME }}/bankapp${{ git rev-parse --abbrev-ref HEAD }}:latest
