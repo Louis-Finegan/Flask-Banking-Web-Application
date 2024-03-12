@@ -1,9 +1,9 @@
-name: Build Test Deploy
+name: Build Test Deploy To Dev
 
 on:
   push:
     branches:
-      - '**'
+      - dev
 
 jobs:
   build:
@@ -64,11 +64,6 @@ jobs:
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-
-      - name: Branch Name 
-        env: 
-          BRANCH: $(git rev-parse --abbrev-ref HEAD)
-
 
       - name: Push Docker image
         uses: docker/build-push-action@v5
