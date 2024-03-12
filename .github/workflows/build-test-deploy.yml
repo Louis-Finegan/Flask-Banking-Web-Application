@@ -47,7 +47,7 @@ jobs:
           git diff --exit-code || echo "::set-output name=changed::true"
         continue-on-error: false
       
-  build_deploy_docker:
+  build_deploy_docker_dev:
     runs-on: ubuntu-latest
     needs: check_push
       

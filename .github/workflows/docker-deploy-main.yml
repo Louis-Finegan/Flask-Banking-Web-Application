@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-    build_deploy_docker:
+    build_deploy_docker_main:
         runs-on: ubuntu-latest
           
         steps:
