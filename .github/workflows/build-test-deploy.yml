@@ -67,7 +67,7 @@ jobs:
 
       - name: test
         run: |
-          echo ${{ github.branches }}
+          echo ${{ github.base_ref }}
 
       - name: Push Docker image
         uses: docker/build-push-action@v5
