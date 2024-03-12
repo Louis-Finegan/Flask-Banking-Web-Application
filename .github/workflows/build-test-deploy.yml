@@ -65,8 +65,11 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: test
+        run: |
+          echo ${{ github.branches }}
+
       - name: Push Docker image
-        if: $(git rev-parse --abbrev-ref HEAD) == "dev"
         uses: docker/build-push-action@v5
         with:
           context: .
