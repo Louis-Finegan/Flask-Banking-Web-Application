@@ -27,7 +27,11 @@ def CheckEmail(email):
     pattern = r'^[\w\.-]+@[\w\.-]+\.\w+$'
     return re.match(pattern, email) is not None
 
+def CheckDOB(DOB):
+    pass
 
+def CheckAge(DOB):
+    pass
 
 auth = Blueprint('auth', __name__)
 
