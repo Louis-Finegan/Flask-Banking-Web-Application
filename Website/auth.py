@@ -6,6 +6,7 @@ from flask_login import login_user, login_required, logout_user, current_user
 
 
 from string import punctuation
+from datetime import datetime
 import re
 
 
@@ -28,10 +29,16 @@ def CheckEmail(email):
     return re.match(pattern, email) is not None
 
 def CheckDOB(DOB):
-    pass
+    try:
+        datetime.strptime(DOB, '%d/%m/%Y')
+        return True
+    except ValueError:
+        return False
 
 def CheckAge(DOB):
-    pass
+    today = datetime.today()
+    dob = datetime.strptime(DOB, '%d/%m/%Y')
+    return today.year - dob.year
 
 auth = Blueprint('auth', __name__)
 
@@ -86,6 +93,10 @@ def register():
             flash('Passwords do not match', category='error')
         elif not CheckEmail(email):
             flash('Invalid email', category='error')
+        elif not CheckDOB(dob):
+            flash('Date of Birth must written as dd/mm/YYYY', category='error')
+        elif CheckAge(dob) < 18:
+            flash('You must be over 18 to register', category='error')
         else:
             new_user = User(
                 username=username, 
