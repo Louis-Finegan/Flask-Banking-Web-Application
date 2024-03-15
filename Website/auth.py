@@ -3,20 +3,29 @@ from .models import User, Account
 from werkzeug.security import generate_password_hash, check_password_hash
 from . import db   ##means from __init__.py import db
 from flask_login import login_user, login_required, logout_user, current_user
-from string import punctuation
 
-def is_capital_in_string(string):
+
+from string import punctuation
+import re
+
+
+def CheckCapital(string):
     for char in string:
         if char.isupper():
             return True
     return False
 
-def has_special_character(string):
+def CheckSpecialChar(string):
     special_characters = set(punctuation)  # Get all punctuation characters
     for char in string:
         if char in special_characters:
             return True
     return False
+
+def CheckEmail(email):
+    # Regular expression for validating email addresses
+    pattern = r'^[\w\.-]+@[\w\.-]+\.\w+$'
+    return re.match(pattern, email) is not None
 
 
 
@@ -65,12 +74,14 @@ def register():
             flash('Username already exists!', category='error')
         elif len(password) < 8:
             flash('Password must have atleast 8 characters', category='error')
-        elif not is_capital_in_string(password):
+        elif not CheckCapital(password):
             flash('Password must have an upper case character', category='error')
-        elif not has_special_character(password):
+        elif not CheckSpecialChar(password):
             flash('Password must contain a special character', category='error')
         elif password != password1:
             flash('Passwords do not match', category='error')
+        elif not CheckEmail(email):
+            flash('Invalid email', category='error')
         else:
             new_user = User(
                 username=username, 
