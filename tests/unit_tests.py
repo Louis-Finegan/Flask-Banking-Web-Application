@@ -27,7 +27,7 @@ class TestFlaskApp(unittest.TestCase):
                     'Password/'),
                 email='test@example.com',
                 address='add1',
-                country='country',
+                country='Ireland',
                 dob='01/01/2000'
             )
             db.session.add(self.user)
