@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for
-from .models import User, Account
+from .models import User, Account, COUNTRY_CURRENCY
 from werkzeug.security import generate_password_hash, check_password_hash
 from . import db   ##means from __init__.py import db
 from flask_login import login_user, login_required, logout_user, current_user
@@ -80,9 +80,12 @@ def register():
         dob = request.form.get('DOB')
 
         user = User.query.filter_by(username=username).first()
+        user_country = COUNTRY_CURRENCY.query.filter_by(country=country).first()
 
         if user:
             flash('Username already exists!', category='error')
+        elif not user_country:
+            flash('App is not supported in your country', category='error')
         elif len(password) < 8:
             flash('Password must have atleast 8 characters', category='error')
         elif not CheckCapital(password):

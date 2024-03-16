@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, flash, jsonify
 from flask_login import login_required, current_user
-from .models import Account, User
+from .models import Account, User, COUNTRY_CURRENCY
 from . import db
 from flask import redirect, url_for, send_from_directory
 import os
@@ -17,8 +17,10 @@ def dashboard():
     user = current_user
     accounts = Account.query.filter_by(user_id=user.id).first()
     balance = accounts.balance if accounts else None
+    user_country = COUNTRY_CURRENCY.query.filter_by(country=user.country).first()
+    symbol = user_country.currency_symbol
 
-    return render_template('dashboard.html', user=current_user, accounts=accounts, balance=balance)
+    return render_template('dashboard.html', user=current_user, accounts=accounts, balance=balance, symbol=symbol)
 
 
 @views.route('/add_money', methods=['POST'])
