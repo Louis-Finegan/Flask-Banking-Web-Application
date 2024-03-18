@@ -20,3 +20,9 @@ class User(UserMixin, db.Model):
     dob = db.Column(db.String(10))
     is_admin = db.Column(db.Boolean, default=False)
     accounts = db.relationship('Account', backref='user', lazy=True)
+
+class COUNTRY_CURRENCY(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    country = db.Column(db.String(100))
+    currency_code = db.Column(db.String(100))
+    currency_symbol = db.Column(db.String(10))

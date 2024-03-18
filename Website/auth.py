@@ -1,24 +1,44 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for
-from .models import User, Account
+from .models import User, Account, COUNTRY_CURRENCY
 from werkzeug.security import generate_password_hash, check_password_hash
 from . import db   ##means from __init__.py import db
 from flask_login import login_user, login_required, logout_user, current_user
-from string import punctuation
 
-def is_capital_in_string(string):
+
+from string import punctuation
+from datetime import datetime
+import re
+
+
+def CheckCapital(string):
     for char in string:
         if char.isupper():
             return True
     return False
 
-def has_special_character(string):
+def CheckSpecialChar(string):
     special_characters = set(punctuation)  # Get all punctuation characters
     for char in string:
         if char in special_characters:
             return True
     return False
 
+def CheckEmail(email):
+    # Regular expression for validating email addresses
+    pattern = r'^[\w\.-]+@[\w\.-]+\.\w+$'
+    return re.match(pattern, email) is not None
 
+def CheckDOB(DOB):
+    try:
+        datetime.strptime(DOB, '%d/%m/%Y')
+        return True
+    except ValueError:
+        return False
+
+def CheckAge(DOB):
+    today = datetime.today()
+    dob = datetime.strptime(DOB, '%d/%m/%Y')
+    return today.year - dob.year
 
 auth = Blueprint('auth', __name__)
 
@@ -60,17 +80,26 @@ def register():
         dob = request.form.get('DOB')
 
         user = User.query.filter_by(username=username).first()
+        user_country = COUNTRY_CURRENCY.query.filter_by(country=country).first()
 
         if user:
             flash('Username already exists!', category='error')
+        elif not user_country:
+            flash('App is not supported in your country', category='error')
         elif len(password) < 8:
             flash('Password must have atleast 8 characters', category='error')
-        elif not is_capital_in_string(password):
+        elif not CheckCapital(password):
             flash('Password must have an upper case character', category='error')
-        elif not has_special_character(password):
+        elif not CheckSpecialChar(password):
             flash('Password must contain a special character', category='error')
         elif password != password1:
             flash('Passwords do not match', category='error')
+        elif not CheckEmail(email):
+            flash('Invalid email', category='error')
+        elif not CheckDOB(dob):
+            flash('Date of Birth must written as dd/mm/YYYY', category='error')
+        elif CheckAge(dob) < 18:
+            flash('You must be over 18 to register', category='error')
         else:
             new_user = User(
                 username=username, 

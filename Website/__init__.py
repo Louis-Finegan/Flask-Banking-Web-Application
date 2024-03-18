@@ -19,7 +19,7 @@ def create_app():
     app.register_blueprint(views, url_prefix='/')
     app.register_blueprint(auth, url_prefix='/')
 
-    from .models import User, Account
+    from .models import User, Account, COUNTRY_CURRENCY
     
     with app.app_context():
         db.create_all()
@@ -32,11 +32,39 @@ def create_app():
     def load_user(id):
         return User.query.get(int(id))
     
+    with app.app_context():
+
+        countries_data = [
+            {"country": "United States", "currency_code": "USD", "currency_symbol": "\u0024"},
+            {"country": "United Kingdom", "currency_code": "GBP", "currency_symbol": "\u20A4"},
+            {"country": "Canada", "currency_code": "CAD", "currency_symbol": "\u0024"},
+            {"country": "Australia", "currency_code": "AUD", "currency_symbol": "\u0024"},
+            {"country": "Germany", "currency_code": "EUR", "currency_symbol": "\u20AC"},
+            {"country": "France", "currency_code": "EUR", "currency_symbol": "\u20AC"},
+            {"country": "Japan", "currency_code": "JPY", "currency_symbol": "\u00A5"},
+            {"country": "Ireland", "currency_code": "EUR", "currency_symbol": "\u20AC"},
+            {"country": "China", "currency_code": "CNY", "currency_symbol": "\u00A5"},
+        ]
+
+        for country_info in countries_data:
+            country_instance = COUNTRY_CURRENCY.query.filter_by(country=country_info["country"]).first()
+
+            if country_instance:
+                pass
+            else:
+                country = COUNTRY_CURRENCY(
+                    country=country_info["country"], 
+                    currency_code=country_info["currency_code"], 
+                    currency_symbol=country_info["currency_symbol"])
+                
+                db.session.add(country)
+
+        db.session.commit()
 
     return app
 
 
 def create_database(app):
-    if not path.exists('website/' + DB_NAME):
+    if not path.exists('instance/' + DB_NAME):
         db.create_all(app=app)
         print('Created Database!')

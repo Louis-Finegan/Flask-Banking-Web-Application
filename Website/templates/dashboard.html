@@ -1,7 +1,7 @@
 
 {% extends "base.html" %} {% block title %}dashboard{% endblock %} {% block content %}
 <h1 align="center">Welcome, {{ user.username }}</h1>
-<h3 align="center">Your Balance: ${{ balance }}</h3>
+<h3 align="center">Your Balance: {{ symbol }}{{ balance }}</h3>
 
 <h2 align="center">Actions</h2>
 
