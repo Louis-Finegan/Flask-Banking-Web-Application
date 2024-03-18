@@ -8,7 +8,7 @@
 <div class="form-group">
     <form action="{{ url_for('views.add_money') }}" method="post">
         <label for="amount">Amount to add:</label>
-        <input type="number" id="amount" name="amount" required><br><br>
+        <input type="number" step="0.01" id="amount" name="amount" required><br><br>
         <button type="submit">Add Money</button>
     </form>
 </div>
@@ -16,7 +16,7 @@
 <div class="form-group">
     <form action="{{ url_for('views.withdraw_money') }}" method="post">
         <label for="amount">Amount to withdraw:</label>
-        <input type="number" id="amount" name="amount" required><br><br>
+        <input type="number" step="0.01" id="amount" name="amount" required><br><br>
         <button type="submit">Withdraw Money</button>
     </form>
 </div>
@@ -24,7 +24,7 @@
 <div class="form-group">
     <form action="{{ url_for('views.transfer_money') }}" method="post">
         <label for="amount">Amount to transfer:</label>
-        <input type="number" id="amount" name="amount" required><br><br>
+        <input type="number" step="0.01" id="amount" name="amount" required><br><br>
         <label for="recipient_username">Receiver Username:</label>
         <input type="text" id="recipient_username" name="recipient_username" required><br><br>
         <button type="submit">Transfer Money</button>

@@ -106,7 +106,7 @@ def transfer_money():
                     recipient_amount = currency_exchanger.get_value(response=response)
 
                     sender_account.balance -= amount
-                    recipient_account.balance += recipient_amount
+                    recipient_account.balance += round(recipient_amount, 2)
                     db.session.commit()
                     flash(f'Transferred {amount} to {recipient_username}.', category='success')
                 else:
