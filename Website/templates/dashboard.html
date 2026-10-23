@@ -1,33 +1,60 @@
-
-{% extends "base.html" %} {% block title %}dashboard{% endblock %} {% block content %}
-<h1 align="center">Welcome, {{ user.username }}</h1>
-<h3 align="center">Your Balance: {{ symbol }}{{ balance }}</h3>
-
-<h2 align="center">Actions</h2>
-
-<div class="form-group">
+{% extends 'base.html' %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="page-heading"><div><p class="eyebrow">YOUR ACCOUNT</p><h1>Welcome, {{ current_user.username }}</h1></div><span class="muted">{{ current_user.country }}</span></div>
+<section class="balance-card" aria-label="Account balance">
+  <p>Available demo balance</p>
+  <div class="balance">{{ currency.currency_symbol }}{{ account.balance_cents | money }} <span>{{ currency.currency_code }}</span></div>
+  <p class="balance-note">Your account uses {{ currency.currency_code }}. Transfers to other currencies use a live conversion.</p>
+</section>
+<div class="actions">
+  <section class="card">
+    <h2>Add money</h2><p class="muted">Top up your demo account.</p>
     <form action="{{ url_for('views.add_money') }}" method="post">
-        <label for="amount">Amount to add:</label>
-        <input type="number" step="0.01" id="amount" name="amount" required><br><br>
-        <button type="submit">Add Money</button>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label for="deposit">Amount ({{ currency.currency_code }})</label>
+      <input type="number" min="0.01" max="999999999.99" step="0.01" id="deposit" name="amount" placeholder="0.00" required>
+      <button type="submit">Add demo money</button>
     </form>
-</div>
-  
-<div class="form-group">
+  </section>
+  <section class="card">
+    <h2>Withdraw</h2><p class="muted">Remove funds from your balance.</p>
     <form action="{{ url_for('views.withdraw_money') }}" method="post">
-        <label for="amount">Amount to withdraw:</label>
-        <input type="number" step="0.01" id="amount" name="amount" required><br><br>
-        <button type="submit">Withdraw Money</button>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label for="withdrawal">Amount ({{ currency.currency_code }})</label>
+      <input type="number" min="0.01" max="999999999.99" step="0.01" id="withdrawal" name="amount" placeholder="0.00" required>
+      <button type="submit" class="secondary">Withdraw demo money</button>
     </form>
-</div>
-
-<div class="form-group">
+  </section>
+  <section class="card">
+    <h2>Send money</h2><p class="muted">Transfer to another demo account.</p>
     <form action="{{ url_for('views.transfer_money') }}" method="post">
-        <label for="amount">Amount to transfer:</label>
-        <input type="number" step="0.01" id="amount" name="amount" required><br><br>
-        <label for="recipient_username">Receiver Username:</label>
-        <input type="text" id="recipient_username" name="recipient_username" required><br><br>
-        <button type="submit">Transfer Money</button>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label for="recipient">Recipient username</label>
+      <input type="text" id="recipient" name="recipient_username" maxlength="100" required autocomplete="off">
+      <label for="transfer">Amount to send ({{ currency.currency_code }})</label>
+      <input type="number" min="0.01" max="999999999.99" step="0.01" id="transfer" name="amount" placeholder="0.00" required>
+      <button type="submit">Send demo money</button>
     </form>
+  </section>
 </div>
+<section class="card history">
+  <div class="section-heading"><h2>Transaction history</h2><span class="muted">{{ history.total }} entries</span></div>
+  {% if history.items %}
+  <div class="table-scroll"><table>
+    <thead><tr><th>Date (UTC)</th><th>Activity</th><th>Amount</th><th>Balance after</th></tr></thead>
+    <tbody>{% for entry in history.items %}
+      <tr><td class="muted">{{ entry.created_at.strftime('%d %b %Y, %H:%M') }}</td>
+      <td>{{ entry.kind.replace('_', ' ') | title }}{% if entry.counterparty %}<small>{{ 'To' if entry.amount_cents < 0 else 'From' }} {{ entry.counterparty }}</small>{% endif %}<small class="reference">Ref {{ entry.reference[:12] }}</small></td>
+      <td class="numeric {{ 'credit' if entry.amount_cents > 0 else '' }}">{{ '+' if entry.amount_cents > 0 else '' }}{{ entry.amount_cents | money }} {{ entry.currency_code }}</td>
+      <td class="numeric">{{ entry.balance_after_cents | money }} {{ entry.currency_code }}</td></tr>
+    {% endfor %}</tbody>
+  </table></div>
+  {% else %}<div class="empty"><h3>No transactions yet</h3><p>Add some demo money to get started. Your activity will appear here.</p></div>{% endif %}
+  {% if history.pages > 1 %}<nav class="pagination" aria-label="Transaction pages">
+    {% if history.has_prev %}<a href="{{ url_for('views.dashboard', page=history.prev_num) }}">Previous</a>{% endif %}
+    <span>Page {{ history.page }} of {{ history.pages }}</span>
+    {% if history.has_next %}<a href="{{ url_for('views.dashboard', page=history.next_num) }}">Next</a>{% endif %}
+  </nav>{% endif %}
+</section>
 {% endblock %}

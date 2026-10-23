@@ -1,132 +1,103 @@
-from flask import Blueprint, render_template, request, flash, redirect, url_for
-from .models import User, Account, COUNTRY_CURRENCY
-from werkzeug.security import generate_password_hash, check_password_hash
-from . import db   ##means from __init__.py import db
-from flask_login import login_user, login_required, logout_user, current_user
-
-
-from string import punctuation
-from datetime import datetime
+"""Registration and session routes, with validation on the server."""
+from datetime import date, datetime
 import re
+from string import punctuation
+from flask import Blueprint, render_template, request, flash, redirect, url_for
+from flask_login import login_user, login_required, logout_user, current_user
+from sqlalchemy.exc import IntegrityError
+from werkzeug.security import generate_password_hash, check_password_hash
+from . import db
+from .models import User, Account, COUNTRY_CURRENCY
 
+auth = Blueprint('auth', __name__)
 
-def CheckCapital(string):
-    for char in string:
-        if char.isupper():
-            return True
-    return False
+def CheckCapital(value):
+    return any(char.isupper() for char in value)
 
-def CheckSpecialChar(string):
-    special_characters = set(punctuation)  # Get all punctuation characters
-    for char in string:
-        if char in special_characters:
-            return True
-    return False
+def CheckSpecialChar(value):
+    return any(char in punctuation for char in value)
 
-def CheckEmail(email):
-    # Regular expression for validating email addresses
-    pattern = r'^[\w\.-]+@[\w\.-]+\.\w+$'
-    return re.match(pattern, email) is not None
+def CheckEmail(value):
+    return re.fullmatch(r'[^\s@]+@[^\s@.]+(?:\.[^\s@.]+)+', value) is not None
 
-def CheckDOB(DOB):
+def CheckDOB(value):
+    if not re.fullmatch(r'\d{2}/\d{2}/\d{4}', value):
+        return False
     try:
-        datetime.strptime(DOB, '%d/%m/%Y')
+        datetime.strptime(value, '%d/%m/%Y')
         return True
     except ValueError:
         return False
 
-def CheckAge(DOB):
-    today = datetime.today()
-    dob = datetime.strptime(DOB, '%d/%m/%Y')
-    return today.year - dob.year
-
-auth = Blueprint('auth', __name__)
-
+def CheckAge(value, today=None):
+    """Count completed birthdays rather than just subtracting birth years."""
+    today = today or date.today()
+    born = datetime.strptime(value, '%d/%m/%Y').date()
+    return today.year - born.year - ((today.month, today.day) < (born.month, born.day))
 
 @auth.route('/login', methods=['GET', 'POST'])
 def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('views.dashboard'))
     if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
-        user = User.query.filter_by(username=username).first()
-        if user:
-            if check_password_hash(user.password, password):
-                flash('Logged in successfully!', category='success')
-                login_user(user, remember=True)
-                return redirect(url_for('views.dashboard'))
-            else:
-                flash('Incorrect password, try again.', category='error')
-        else:
-            flash('Username does not exist.', category='error')
-    return render_template("login.html", user=current_user)
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '')
+        user = db.session.scalar(db.select(User).filter_by(username=username))
+        if user and check_password_hash(user.password, password):
+            login_user(user)
+            return redirect(url_for('views.dashboard'))
+        flash('Incorrect username or password.', 'error')
+    return render_template('login.html')
 
-@auth.route('/logout')
+@auth.route('/logout', methods=['POST'])
 @login_required
 def logout():
     logout_user()
     return redirect(url_for('auth.login'))
 
-
 @auth.route('/register', methods=['GET', 'POST'])
 def register():
+    if current_user.is_authenticated:
+        return redirect(url_for('views.dashboard'))
+    countries = db.session.scalars(db.select(COUNTRY_CURRENCY).order_by(COUNTRY_CURRENCY.country)).all()
     if request.method == 'POST':
-
-        username = request.form.get('username')
-        password = request.form.get('password')
-        password1 = request.form.get('password1')
-        email = request.form.get('email')
-        address = request.form.get('address')
-        country = request.form.get('country')
-        dob = request.form.get('DOB')
-
-        user = User.query.filter_by(username=username).first()
-        user_country = COUNTRY_CURRENCY.query.filter_by(country=country).first()
-
-        if user:
-            flash('Username already exists!', category='error')
-        elif not user_country:
-            flash('App is not supported in your country', category='error')
-        elif len(password) < 8:
-            flash('Password must have atleast 8 characters', category='error')
-        elif not CheckCapital(password):
-            flash('Password must have an upper case character', category='error')
-        elif not CheckSpecialChar(password):
-            flash('Password must contain a special character', category='error')
-        elif password != password1:
-            flash('Passwords do not match', category='error')
-        elif not CheckEmail(email):
-            flash('Invalid email', category='error')
-        elif not CheckDOB(dob):
-            flash('Date of Birth must written as dd/mm/YYYY', category='error')
-        elif CheckAge(dob) < 18:
-            flash('You must be over 18 to register', category='error')
+        data = {key: request.form.get(key, '').strip()
+                for key in ('username', 'email', 'address', 'country', 'DOB')}
+        password = request.form.get('password', '')
+        confirmation = request.form.get('password1', '')
+        error = None
+        if not all(data.values()) or not password or not confirmation:
+            error = 'Please fill in all fields.'
+        elif any(len(value) > 100 for value in data.values()) or len(password) > 256:
+            error = 'One or more fields are too long.'
+        elif not any(c.country == data['country'] for c in countries):
+            error = 'App is not supported in your country.'
+        elif len(password) < 8 or not CheckCapital(password) or not CheckSpecialChar(password):
+            error = 'Password needs at least 8 characters, an uppercase letter and a special character.'
+        elif password != confirmation:
+            error = 'Passwords do not match.'
+        elif not CheckEmail(data['email']):
+            error = 'Enter a valid email address.'
+        elif not CheckDOB(data['DOB']):
+            error = 'Date of birth must be a valid date in DD/MM/YYYY format.'
+        elif CheckAge(data['DOB']) < 18:
+            error = 'You must be at least 18 to register.'
+        if error:
+            flash(error, 'error')
         else:
-            new_user = User(
-                username=username, 
-                password=generate_password_hash(
-                    password), 
-                email=email, 
-                address=address, 
-                country=country, 
-                dob=dob)
-            
-            db.session.add(new_user)
-            db.session.commit()
-
-            new_account = Account(
-                user_id = new_user.id)
-            
-            db.session.add(new_account)
-            db.session.commit()
-
-            login_user(new_user, remember=True)
-            flash('Account created successfully!', category='success')
-
-            return redirect(url_for('views.dashboard'))
-            
-        
-            
-
-    return render_template('register.html', user=current_user)
-
-
+            user = User(username=data['username'], email=data['email'], address=data['address'],
+                        country=data['country'], dob=data['DOB'], password=generate_password_hash(password))
+            # Flush obtains an id without committing a user without an account.
+            try:
+                db.session.add(user)
+                db.session.flush()
+                db.session.add(Account(user_id=user.id, balance_cents=0))
+                db.session.commit()
+            except IntegrityError:
+                db.session.rollback()
+                flash('Username already exists.', 'error')
+            else:
+                login_user(user)
+                flash('Account created successfully!', 'success')
+                return redirect(url_for('views.dashboard'))
+    return render_template('register.html', countries=countries)
