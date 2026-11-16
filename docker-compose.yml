@@ -1,9 +1,13 @@
-version: '3'
-
 services:
   web:
     build: .
     ports:
-      - "5000:5000"
+      - "127.0.0.1:5000:5000"
+    environment:
+      SECRET_KEY: ${SECRET_KEY:-}
+      CURRENCYBEACON_KEY: ${CURRENCYBEACON_KEY:-}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
     volumes:
-      - .:/app
+      - bank-data:/app/instance
+volumes:
+  bank-data:

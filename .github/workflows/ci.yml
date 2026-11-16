@@ -1,0 +1,75 @@
+name: Tests and container
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.11', '3.12', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+      - run: python -m pip install -r requirements-dev.txt
+      - run: python -m pytest --cov=Website --cov-report=term-missing
+  container:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t bankapp:ci .
+      - name: Smoke test application server
+        run: |
+          docker run -d --name bank-smoke -p 127.0.0.1:5000:5000 bankapp:ci
+          python - <<'PY'
+          import time
+          import urllib.request
+          for attempt in range(20):
+              try:
+                  with urllib.request.urlopen('http://127.0.0.1:5000/login', timeout=2) as response:
+                      assert response.status == 200
+                      break
+              except OSError:
+                  time.sleep(1)
+          else:
+              raise SystemExit('Container did not become ready')
+          PY
+      - if: always()
+        run: docker logs bank-smoke
+  publish:
+    if: github.event_name == 'push'
+    needs: container
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check optional Docker Hub credentials
+        id: credentials
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        run: |
+          if [ -n "$DOCKER_USERNAME" ] && [ -n "$DOCKER_PASSWORD" ]; then
+            echo 'available=true' >> "$GITHUB_OUTPUT"
+          fi
+      - uses: docker/login-action@v3
+        if: steps.credentials.outputs.available == 'true'
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - uses: docker/setup-buildx-action@v3
+        if: steps.credentials.outputs.available == 'true'
+      - uses: docker/build-push-action@v6
+        if: steps.credentials.outputs.available == 'true'
+        with:
+          context: .
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/${{ github.ref_name == 'main' && 'bankapp' || 'bankappdev' }}:latest
